@@ -1,0 +1,17 @@
+title: My Blog
+description: A Jekyll-based blog powered by Cloudflare Pages
+theme: minima
+plugins:
+  - jekyll-feed
+
+  # Site settings
+  url: ""
+  baseurl: ""
+
+  # Author
+  author:
+    name: Blog Author
+      email: author@example.com
+
+      # Build settings
+      markdown: kramdown
