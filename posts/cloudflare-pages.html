@@ -1,0 +1,80 @@
+<!DOCTYPE html>
+  <html lang="ja">
+  <head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Cloudflare Pagesの紹介 - My Blog</title>
+    <link rel="stylesheet" href="../style.css">
+  </head>
+  <body>
+    <header class="site-header">
+      <div class="container">
+        <h1 class="site-title"><a href="../index.html">My Blog</a></h1>
+        <p class="site-description">Cloudflare Pagesで動くシンプルブログ</p>
+        <nav>
+          <a href="../index.html">ホーム</a>
+        </nav>
+      </div>
+    </header>
+
+    <main class="container">
+      <a href="../index.html" class="back-link">← ホームに戻る</a>
+
+      <article class="post-article">
+        <h1>Cloudflare Pagesの紹介</h1>
+        <div class="post-meta">
+          <span class="post-date">2026年4月18日</span>
+          <span class="post-category">テクノロジー</span>
+        </div>
+
+        <p>
+          Cloudflare Pagesは、静的サイトを無料でホスティングできる強力なプラットフォームです。
+        GitHubリポジトリと連携することで、コードをプッシュするだけで自動デプロイが行われます。
+      </p>
+
+      <h2>Cloudflare Pagesの主な特徴</h2>
+      <ul>
+          <li>完全無料で利用可能（商用利用も可）</li>
+          <li>Cloudflareのグローバルネットワーク（200以上の拠点）で配信</li>
+          <li>GitHubと連携した自動デプロイ</li>
+          <li>カスタムドメインの設定が簡単</li>
+          <li>HTTPSが自動で有効化される</li>
+          <li>高速なページロード速度</li>
+        </ul>
+
+        <h2>WordPressとの違い</h2>
+        <p>
+          WordPressはデータベースを使った動的CMSですが、Cloudflare Pagesはあらかじめ生成された
+        静的なHTMLファイルを配信します。これにより、サーバーの維持費用が不要で、
+        セキュリティリスクも大幅に低減されます。
+      </p>
+      <p>
+        静的サイトのメリットは、ページの読み込みが非常に速く、
+        サーバーダウンのリスクがほぼないことです。また、
+        SQLインジェクションやプラグインの脆弱性といった
+        セキュリティ問題からも解放されます。
+      </p>
+
+        <h2>デプロイの流れ</h2>
+        <ul>
+          <li>GitHubにリポジトリを作成する</li>
+          <li>HTMLファイルをリポジトリにコミットする</li>
+          <li>Cloudflare PagesとGitHubを連携する</li>
+        <li>ビルドコマンドなし、ルートディレクトリを指定してデプロイ</li>
+          <li>自動でグローバル配信が始まる</li>
+        </ul>
+
+        <p>
+          このブログ自体がCloudflare Pagesで動いており、GitHubに記事を追加するだけで
+        自動的に公開される仕組みになっています。
+      </p>
+    </article>
+  </main>
+
+  <footer class="site-footer">
+    <div class="container">
+      <p>2026 My Blog. Powered by Cloudflare Pages</p>
+      </div>
+    </footer>
+  </body>
+  </html>
