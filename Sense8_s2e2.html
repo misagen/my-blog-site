@@ -1,0 +1,537 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>予習テスト：Deep Study 4カラム版</title>
+    <style>
+        :root {
+            --bg-color: #0d1117; --container-bg: #161b22; --text-main: #c9d1d9; --text-muted: #8b949e;
+            --accent-blue: #58a6ff; --accent-orange: #f0883e; --accent-green: #3fb950; --accent-red: #ff7b72;
+            --border: #30363d; --tree-line: #484f58;
+        }
+
+        body {
+            background-color: var(--bg-color); color: var(--text-main);
+            font-family: 'Segoe UI', sans-serif; margin: 0; padding: 20px; padding-bottom: 80px; 
+            overflow-x: auto; /* ブラウザ全体の横スクロールを有効化 */
+        }
+
+        .container { width: 1700px; margin: 0 auto; } /* テーブル全体の幅を強制固定 */
+        
+        .header-container {
+            display: flex; justify-content: space-between; align-items: center;
+            margin-top: 10px; margin-bottom: 20px; width: 100%;
+        }
+        
+        #page-title { font-size: 1.5rem; letter-spacing: 2px; margin: 0; color: #fff; }
+
+        .controls-panel { display: flex; gap: 15px; }
+        .control-group {
+            display: flex; align-items: center; gap: 6px;
+            background: rgba(255,255,255,0.05); padding: 5px 10px; border-radius: 6px; border: 1px solid var(--border);
+        }
+        .control-group label { font-size: 0.75rem; color: var(--text-muted); font-weight: bold; }
+        .control-group select {
+            background: var(--bg-color); color: var(--text-main); border: 1px solid var(--border);
+            border-radius: 4px; padding: 2px 5px; font-size: 0.75rem; outline: none; cursor: pointer;
+        }
+
+        .level-label { display: inline-block; padding: 8px 16px; font-weight: bold; border-radius: 8px 8px 0 0; font-size: 0.8rem; margin-top: 10px; }
+        .bg-mid { background-color: var(--accent-blue); color: #000; }
+        .bg-adv { background-color: var(--accent-orange); color: #000; }
+        
+        table { width: 100%; border-collapse: collapse; background-color: var(--container-bg); border-radius: 0 12px 12px 12px; table-layout: fixed; box-shadow: 0 10px 30px rgba(0,0,0,0.5); }
+        
+        /* 4列の黄金比設定 */
+        .col-info { width: 14%; }    /* 基本 */
+        .col-context { width: 22%; } /* 例文 */
+        .col-nuance { width: 26%; }  /* ニュアンス（移植デザイン用） */
+        .col-map { width: 38%; }     /* 関連（画面右外へ） */
+
+        th, td { padding: 18px; border-bottom: 1px solid var(--border); vertical-align: middle; word-break: break-word; }
+        th { background-color: #090c10; color: var(--text-muted); font-size: 0.7rem; text-transform: uppercase; text-align: left; letter-spacing: 0.1em; }
+
+        /* 1列目：基本情報のオートスケール設定 */
+        .word-info { --scale: 1; display: flex; flex-direction: column; gap: calc(6px * var(--scale)); width: 100%; }
+        .clickable-word-area { display: flex; flex-direction: column; gap: 4px; width: 100%; box-sizing: border-box; cursor: pointer; padding: 6px 8px; margin-left: -8px; border-radius: 6px; transition: 0.2s ease; }
+        .clickable-word-area:hover { background-color: rgba(255, 255, 255, 0.08); box-shadow: inset 0 0 8px rgba(255, 255, 255, 0.05); }
+        .word-title-container { display: flex; align-items: center; width: 100%; justify-content: flex-start; gap: 8px; }
+        .word-title-text { font-size: calc(1.25rem * var(--scale)); font-weight: bold; color: #fff; white-space: nowrap; }
+        .pron { color: var(--accent-blue); font-size: calc(0.85rem * var(--scale)); font-family: monospace; }
+        .reveal-mean { display: block; border-radius: 6px; padding: calc(10px * var(--scale)); cursor: pointer; text-align: left; font-size: calc(0.9rem * var(--scale)); line-height: 1.5; background: transparent; color: var(--accent-green); font-weight: bold; transition: 0.3s; }
+        .reveal-mean.hidden { color: transparent; text-shadow: 0 0 10px rgba(63, 185, 80, 0.6); background-color: #21262d; font-weight: normal; }
+        .mean-list { list-style: none; padding-left: 0; margin: 0; }
+        .mean-list li { text-indent: -1em; padding-left: 1em; margin-bottom: 2px; }
+        .mean-list li::before { content: '▸ '; }
+
+        /* 2列目：例文エリア */
+        .usage-tag { font-weight: bold; color: var(--text-muted); font-size: 0.7rem; padding: 2px 8px; border: 1px solid var(--border); border-radius: 4px; display: inline-block; margin-bottom: 8px; background: rgba(255,255,255,0.03); }
+        .clickable-ex-area { display: block; cursor: pointer; padding: 6px 10px; margin-left: -10px; margin-bottom: 8px; border-radius: 6px; transition: 0.2s; }
+        .clickable-ex-area:hover { background-color: rgba(255, 255, 255, 0.08); }
+        .ai-ex { color: #fff; font-size: 1rem; font-weight: 500; line-height: 1.4; display: block; margin-bottom: 4px; }
+        .trans-text { font-size: 0.85rem; color: var(--accent-blue); line-height: 1.4; font-weight: bold; }
+        .reveal-movie { display: inline-block; width: 100%; box-sizing: border-box; padding: 10px; border-left: 3px solid var(--accent-red); background: rgba(255,123,114,0.05); font-style: italic; color: var(--accent-red); cursor: pointer; filter: blur(4px); transition: filter 0.4s, background-color 0.2s; font-size: 0.85rem; }
+        .reveal-movie.revealed { filter: blur(0); background: rgba(255,123,114,0.05); }
+        .reveal-movie.revealed:hover { background: rgba(255,123,114,0.12); }
+
+        /* 3列目：ニュアンス列（パターンA移植デザイン） */
+        .origin-header { display: flex; align-items: baseline; gap: 8px; margin-bottom: 10px; padding-bottom: 8px; border-bottom: 1px dashed var(--border); }
+        .keyword-tone { color: var(--accent-blue); font-weight: bold; font-size: 0.85rem; }
+        .keyword-core { color: var(--text-main); font-size: 0.85rem; font-weight: bold; }
+        .story-text { color: var(--text-muted); font-size: 0.85rem; line-height: 1.6; }
+        .hl-word { color: var(--accent-orange); font-weight: bold; border-bottom: 1px dashed var(--accent-orange); }
+        .nuance-box-a { position: relative; margin-top: 15px; border: 1px solid var(--accent-blue); border-radius: 6px; background: rgba(88, 166, 255, 0.05); padding: 12px 15px; }
+        .nuance-label-a { position: absolute; top: -10px; left: 12px; background: var(--container-bg); padding: 0 6px; color: var(--accent-blue); font-size: 0.7rem; font-weight: bold; letter-spacing: 1px; }
+        .nuance-text-a { color: #fff; font-size: 0.85rem; font-weight: bold; line-height: 1.5; }
+
+        /* 4列目：関連（ツリー） */
+        .map-scroll-container { border: 1px solid var(--border); border-radius: 10px; background: transparent; padding: 15px; overflow-x: auto; }
+        .map-wrapper { display: flex; align-items: center; gap: 20px; min-width: max-content; }
+        .node { padding: 8px 14px; border-radius: 50px; border: 1px solid var(--tree-line); background: rgba(255,255,255,0.05); font-size: 0.75rem; white-space: nowrap; display: flex; align-items: center; gap: 5px; color: var(--text-main); cursor: pointer; transition: 0.2s; }
+        .node:hover { background-color: rgba(255,255,255,0.15); }
+        .root-node { flex-direction: column; align-items: center; justify-content: center; border: 2px solid var(--accent-orange); background: rgba(240, 136, 62, 0.1); color: var(--accent-orange); line-height: 1.2; }
+        .root-node:hover { background-color: rgba(240, 136, 62, 0.2); box-shadow: 0 0 12px rgba(240, 136, 62, 0.3); }
+        .main-node { color: var(--accent-blue); font-weight: bold; border-color: var(--accent-blue); background: rgba(88, 166, 255, 0.05); }
+        .main-node:hover { background-color: rgba(88, 166, 255, 0.15); box-shadow: 0 0 12px rgba(88, 166, 255, 0.3); }
+        .branch-container { display: flex; flex-direction: column; gap: 10px; position: relative; padding-left: 25px; }
+        .branch-container::before { content: ''; position: absolute; left: 0; top: 15px; bottom: 15px; width: 1px; background: var(--tree-line); }
+        .node-row { display: flex; align-items: center; position: relative; }
+        .node-row::before { content: ''; position: absolute; left: -25px; top: 50%; width: 25px; height: 1px; background: var(--tree-line); }
+        
+        .play-btn { background: transparent; border: 1px solid var(--border); color: var(--text-muted); border-radius: 4px; padding: 0 5px; cursor: pointer; font-size: 0.6rem; height: 1.5em; display: none; } /* 再生ボタン自体は非表示、エリアクリックで対応 */
+    </style>
+</head>
+<body>
+
+<div class="container">
+    
+    <div class="header-container">
+        <h2 id="page-title">学習単語リスト</h2>
+        <div class="controls-panel">
+            <div class="control-group">
+                <label for="rate-select">Speed:</label>
+                <select id="rate-select">
+                    <option value="0.5">0.5x</option><option value="0.7">0.7x</option><option value="0.9">0.9x</option>
+                    <option value="1.0" selected>1.0x</option><option value="1.2">1.2x</option><option value="1.5">1.5x</option>
+                </select>
+            </div>
+            <div class="control-group"><label for="voice-select">Voice:</label><select id="voice-select"></select></div>
+        </div>
+    </div>
+
+    <div class="level-label bg-mid">中級</div>
+    <table>
+        <thead>
+            <tr>
+                <th class="col-info">単語基本情報</th>
+                <th class="col-context">ニュアンス・例文</th>
+                <th class="col-nuance">語源と深層ニュアンス</th>
+                <th class="col-map">関連表現（マップ）</th>
+            </tr>
+        </thead>
+        <tbody id="mid-list"></tbody>
+    </table>
+
+    <div class="level-label bg-adv">上級</div>
+    <table>
+        <thead>
+            <tr>
+                <th class="col-info">単語基本情報</th>
+                <th class="col-context">ニュアンス・例文</th>
+                <th class="col-nuance">語源と深層ニュアンス</th>
+                <th class="col-map">関連表現（マップ）</th>
+            </tr>
+        </thead>
+        <tbody id="adv-list"></tbody>
+    </table>
+</div>
+
+<!-- データ注入用スクリプト -->
+<script id="ai-data"></script>
+
+<script>
+    /* =========================================================
+       ここに抽出チャットが作成したデータをコピペする
+       ========================================================= */
+const movieTitle = "Sense8 S2E2";
+
+const midData = [
+  {
+    "word": "Underestimate",
+    "pron": "/ˌʌndərˈestɪmeɪt/",
+    "mean": [
+      "過小評価する",
+      "低く見積もる"
+    ],
+    "tag": "[評価 / 誤算]",
+    "aiex": "Never underestimate your opponent's strength.",
+    "aitrans": "相手の力を決して過小評価してはいけない。",
+    "movie": "I underestimated you. - It's all right.",
+    "movieTrans": "君を甘く見ていたよ。— 別にいいさ、よく言われる。",
+    "catchTone": "【想定外の逆転劇】",
+    "catchCore": "基準より下(under)で見積もる",
+    "originText": "<span class=\"hl-word\">Under（下に）</span>と<span class=\"hl-word\">Estimate（見積もる）</span>の組み合わせ。能力や価値を実際よりも低く判断してしまうことを指す。",
+    "nuanceText": "単なる数値の見積もりミスだけでなく、相手の実力を見くびって痛い目に遭うような文脈で非常によく使われる。",
+    "map": {
+      "rootMain": "Estimate",
+      "rootSub": "(評価 / 判断)",
+      "children": [
+        { "text": "Estimate : 見積もる、推定する（動）" },
+        { "text": "Estimation : 評価、判断（名）" },
+        { "text": "Underestimate : 過小評価する（動）", "isMain": true },
+        { "text": "Overestimate : 過大評価する（動）" },
+        { "text": "Inestimable : 計り知れない（形）" }
+      ]
+    }
+  },
+  {
+    "word": "Keep someone up at night",
+    "pron": "/kiːp ˈsʌmwʌn ʌp æt naɪt/",
+    "mean": [
+      "（心配事で）眠れなくさせる",
+      "夜も眠れないほど悩ませる"
+    ],
+    "tag": "[不安 / 執着]",
+    "aiex": "The upcoming exam keeps me up at night.",
+    "aitrans": "今度の試験のことが心配で夜も眠れない。",
+    "movie": "It'd keep me up at night, too.",
+    "movieTrans": "それだけの理由なら、僕だって夜も眠れなくなるよ。",
+    "catchTone": "【枕を高くして寝られない】",
+    "catchCore": "人を起こしたまま(up)にする",
+    "originText": "直訳の「人を夜に起こしておく」から転じて、<span class=\"hl-word\">不安や興奮</span>で眠れない状態を維持させる様子を表す。",
+    "nuanceText": "物理的に起こされているのではなく、心理的なプレッシャーや解決できない問題が頭を離れない状態を強調する慣用句。",
+    "map": {
+      "rootMain": "Sleep",
+      "rootSub": "(睡眠 / 覚醒)",
+      "children": [
+        { "text": "Stay up : 起きている（動）" },
+        { "text": "Keep up : 維持する、寝かせない（動）" },
+        { "text": "Keep me up at night : 眠れなくさせる（熟）", "isMain": true },
+        { "text": "Sleepless night : 眠れない夜（名）" },
+        { "text": "Nightmare : 悪夢（名）" }
+      ]
+    }
+  },
+  {
+    "word": "In charge of",
+    "pron": "/ɪn tʃɑːrdʒ əv/",
+    "mean": [
+      "〜を担当して",
+      "〜の責任者で"
+    ],
+    "tag": "[責任 / 権限]",
+    "aiex": "Who is in charge of this project?",
+    "aitrans": "このプロジェクトの責任者は誰ですか？",
+    "movie": "one of us is ever gonna be in charge of them.",
+    "movieTrans": "僕らの仲間が彼らを支配する側になることなんてない。",
+    "catchTone": "【全権を握る重み】",
+    "catchCore": "責任(charge)の中に(in)いる",
+    "originText": "<span class=\"hl-word\">Charge（責任、荷を負う）</span>の状態の中にいることが語源。特定の範囲を任されていることを示す。",
+    "nuanceText": "ビジネスでも日常でも「仕切っている人」を指す際に必須の表現。権限と責任の両方を含意する。",
+    "map": {
+      "rootMain": "Charge",
+      "rootSub": "(充電 / 責任 / 突撃)",
+      "children": [
+        { "text": "Charge : 充電する、請求する（動）" },
+        { "text": "In charge of : 〜を担当している（熟）", "isMain": true },
+        { "text": "Take charge : 引き受ける、管理下に置く（動）" },
+        { "text": "Discharge : 解放する、排出する（動）" },
+        { "text": "Free of charge : 無料で（副）" }
+      ]
+    }
+  },
+  {
+    "word": "Vulnerability",
+    "pron": "/ˌvʌlnərəˈbɪləti/",
+    "mean": [
+      "脆弱性",
+      "心の脆さ",
+      "弱み"
+    ],
+    "tag": "[感情 / 弱点]",
+    "aiex": "He showed his vulnerability to his friends.",
+    "aitrans": "彼は友人たちに自分の弱さを見せた。",
+    "movie": "I can give him a bit of vulnerability.",
+    "movieTrans": "彼（キャラ）に少し人間的な脆さを出せると思うんだ。",
+    "catchTone": "【守りきれない素顔】",
+    "catchCore": "傷つく(vulnus)ことができる性質",
+    "originText": "ラテン語の<span class=\"hl-word\">Vulnus（傷）</span>が語源。攻撃を受けやすく、傷つきやすい性質を指す。",
+    "nuanceText": "単なる「弱点」ではなく、人間らしい「心の脆さ」や、システムなどの「攻撃されやすさ」を指す抽象度の高い言葉。",
+    "map": {
+      "rootMain": "Vulnerable",
+      "rootSub": "(傷つきやすさ)",
+      "children": [
+        { "text": "Vulnerable : 脆い、傷つきやすい（形）" },
+        { "text": "Vulnerability : 脆弱性、脆さ（名）", "isMain": true },
+        { "text": "Invulnerable : 不死身の、無敵の（形）" },
+        { "text": "Wound : 傷（名）" }
+      ]
+    }
+  },
+  {
+    "word": "Invoke",
+    "pron": "/ɪnˈvoʊk/",
+    "mean": [
+      "（法などを）発動する",
+      "（権限を）行使する"
+    ],
+    "tag": "[権利 / 法律]",
+    "aiex": "The government invoked emergency powers.",
+    "aitrans": "政府は緊急権限を発動した。",
+    "movie": "They're invoking the morals clause.",
+    "movieTrans": "あいつら、道徳条項を持ち出してきたんだ。",
+    "catchTone": "【切り札としての発動】",
+    "catchCore": "中へ(in)呼び出す(vocare)",
+    "originText": "<span class=\"hl-word\">Vocare（呼ぶ）</span>が語源。法的な権利や条項を、効力を持たせるために「呼び出す」ことから。",
+    "nuanceText": "契約や法律などの公的なルールを「適用する」という硬い表現。また、神の助けを「祈り求める」際にも使われる。",
+    "map": {
+      "rootMain": "Voice",
+      "rootSub": "(声 / 呼ぶ)",
+      "children": [
+        { "text": "Invoke : 発動する、呼び覚ます（動）", "isMain": true },
+        { "text": "Provoke : 引き起こす、怒らせる（動）" },
+        { "text": "Advocate : 提唱する、支持者（動・名）" },
+        { "text": "Vocation : 天職、呼びかけ（名）" },
+        { "text": "Revoke : 取り消す、無効にする（動）" }
+      ]
+    }
+  },
+  {
+    "word": "Override",
+    "pron": "/ˌoʊvərˈraɪd/",
+    "mean": [
+      "（命令などを）無効にする",
+      "上書きして制御する"
+    ],
+    "tag": "[強制 / 制御]",
+    "aiex": "The captain can override the autopilot.",
+    "aitrans": "機長は自動操縦を強制的に解除できる。",
+    "movie": "How's the alarm system override?",
+    "movieTrans": "アラームシステムの強制解除はどうなってる？",
+    "catchTone": "【強引な主導権奪還】",
+    "catchCore": "上(over)を通って踏みつける(ride)",
+    "originText": "馬に乗って相手の<span class=\"hl-word\">上を通り過ぎる（無視する）</span>ことが語源。既存の命令を無視して新しい命令を優先させること。",
+    "nuanceText": "システム制御や、上司が部下の決定を覆すなど、元ある流れを強制的に変更する場面で使われる。",
+    "map": {
+      "rootMain": "Ride",
+      "rootSub": "(乗る / 支配)",
+      "children": [
+        { "text": "Ride : 乗る（動）" },
+        { "text": "Override : 無効にする、優先する（動）", "isMain": true },
+        { "text": "Overrule : 却下する、覆す（動）" },
+        { "text": "Overwrite : 上書きする（動）" }
+      ]
+    }
+  },
+  {
+    "word": "Exaggerate",
+    "pron": "/ɪɡˈzædʒəreɪt/",
+    "mean": [
+      "誇張する",
+      "大げさに言う"
+    ],
+    "tag": "[コミュニケーション / 歪曲]",
+    "aiex": "He tends to exaggerate his achievements.",
+    "aitrans": "彼は自分の実績を誇張する傾向がある。",
+    "movie": "you've exaggerated your value.",
+    "movieTrans": "君は自分の価値を過大評価しすぎだ（誇張している）。",
+    "catchTone": "【盛りに盛った話】",
+    "catchCore": "積み上げる(gerere)＋外へ(ex)",
+    "originText": "ラテン語で<span class=\"hl-word\">積み上げる（heap up）</span>が語源。事実の上にさらに言葉を積み上げて大きく見せること。",
+    "nuanceText": "批判的な文脈で「話を盛っている」と言う際によく使われる。TOEIC等のフォーマルな場でも頻出。",
+    "map": {
+      "rootMain": "Heap",
+      "rootSub": "(積み重ね)",
+      "children": [
+        { "text": "Exaggerate : 誇張する（動）", "isMain": true },
+        { "text": "Exaggeration : 誇張（名）" },
+        { "text": "Accumulate : 蓄積する（動）" },
+        { "text": "Overstate : 誇張して述べる（動）" }
+      ]
+    }
+  },
+  {
+    "word": "Accomplish",
+    "pron": "/əˈkɑːmplɪʃ/",
+    "mean": [
+      "成し遂げる",
+      "達成する"
+    ],
+    "tag": "[達成 / 目的]",
+    "aiex": "We can accomplish anything together.",
+    "aitrans": "一緒なら何でも成し遂げられる。",
+    "movie": "What are you hoping to accomplish here?",
+    "movieTrans": "ここで何を達成しよう（企んで）いるんだ？",
+    "catchTone": "【完遂の達成感】",
+    "catchCore": "完全に(ad)満たす(plere)",
+    "originText": "<span class=\"hl-word\">Complete（完成させる）</span>と同じ語源を持つ。器を「満たす」ように、任務を最後までやり遂げること。",
+    "nuanceText": "単に「終わる」のではなく、困難を伴う目標や計画を「成功させる」というポジティブな重みがある。",
+    "map": {
+      "rootMain": "Fill",
+      "rootSub": "(満たす / 完成)",
+      "children": [
+        { "text": "Accomplish : 成し遂げる（動）", "isMain": true },
+        { "text": "Complete : 完了する（形・動）" },
+        { "text": "Fulfill : 満たす、果たす（動）" },
+        { "text": "Complement : 補完する（動）" },
+        { "text": "Plenty : たくさんの（名・形）" }
+      ]
+    }
+  }
+];
+
+const advData = [];
+    /* ========================================================= */
+
+    document.title = `${movieTitle}_単語リスト`;
+    document.getElementById('page-title').innerText = `${movieTitle}：学習単語リスト`;
+
+    let currentVoice = null;
+    let availableVoices = [];
+
+    function initVoices() {
+        let voices = window.speechSynthesis.getVoices();
+        if (voices.length === 0) return;
+        const ua = navigator.userAgent;
+        const isEdge = ua.includes('Edg');
+        const isChrome = ua.includes('Chrome') && !isEdge && !ua.includes('OPR');
+        const allowedNames = ["Jenny", "Eric", "Christopher", "Google US English", "Mark"];
+        let filteredVoices = voices.filter(v => {
+            if (!v.lang.startsWith('en-US')) return false;
+            if (v.name.includes('Multilingual') || v.name.includes('David') || v.name.includes('Zira')) return false;
+            return allowedNames.some(allowed => v.name.includes(allowed));
+        });
+        const select = document.getElementById('voice-select');
+        select.innerHTML = '';
+        availableVoices = [];
+        filteredVoices.forEach(v => {
+            let isAllowed = false;
+            if (isEdge) isAllowed = ["Jenny", "Eric", "Christopher", "Mark"].some(n => v.name.includes(n));
+            else if (isChrome) isAllowed = ["Google US English", "Mark"].some(n => v.name.includes(n));
+            else isAllowed = v.name.includes("Mark");
+            if (isAllowed) {
+                availableVoices.push(v);
+                const option = document.createElement('option');
+                option.value = v.name; option.textContent = v.name; select.appendChild(option);
+            }
+        });
+        let defaultTarget = isEdge ? "Jenny" : isChrome ? "Google US English" : "Mark";
+        let defaultVoice = availableVoices.find(v => v.name.includes(defaultTarget));
+        if (defaultVoice) { select.value = defaultVoice.name; currentVoice = defaultVoice; }
+        select.addEventListener('change', (e) => { currentVoice = availableVoices.find(v => v.name === e.target.value); });
+    }
+    if (window.speechSynthesis.onvoiceschanged !== undefined) window.speechSynthesis.onvoiceschanged = initVoices;
+    initVoices();
+
+    function speak(text, event) {
+        if(event) event.stopPropagation();
+        window.speechSynthesis.cancel();
+        let cleanText = text.replace(/[\(（].*?[\)）]/g, "").trim();
+        const msg = new SpeechSynthesisUtterance(cleanText);
+        msg.lang = 'en-US'; 
+        msg.rate = parseFloat(document.getElementById('rate-select').value);
+        if (currentVoice) msg.voice = currentVoice;
+        window.speechSynthesis.speak(msg);
+    }
+
+    function playMovieLine(element, text, event) {
+        if(event) event.stopPropagation();
+        if (!element.classList.contains('revealed')) { element.classList.add('revealed'); return; }
+        speak(text, event);
+    }
+
+    function adjustWordSizes() {
+        document.querySelectorAll('.word-info').forEach(infoBlock => {
+            const container = infoBlock.querySelector('.clickable-word-area');
+            const textEl = infoBlock.querySelector('.word-title-text');
+            infoBlock.style.setProperty('--scale', '1');
+            const maxWidth = container.clientWidth - 16;
+            const textWidth = textEl.scrollWidth;
+            if (textWidth > maxWidth && maxWidth > 0) {
+                const scale = (maxWidth / textWidth) * 0.95;
+                infoBlock.style.setProperty('--scale', scale);
+            }
+        });
+    }
+    window.addEventListener('resize', adjustWordSizes);
+
+    function buildTree(nodes) {
+        if (!nodes || nodes.length === 0) return '';
+        let html = '<div class="branch-container">';
+        nodes.forEach(node => {
+            let nodeClass = node.isMain ? 'node main-node' : 'node';
+            let wordForSpeech = node.text.split('(')[0].trim().replace(/'/g, "\\'");
+            html += `<div class="node-row"><div class="${nodeClass}" onclick="speak('${wordForSpeech}', event)">${node.text}</div>`;
+            if (node.children) html += buildTree(node.children);
+            html += `</div>`;
+        });
+        html += '</div>';
+        return html;
+    }
+
+    function createRows(data, containerId) {
+        const tbody = document.getElementById(containerId);
+        data.forEach(item => {
+            const tr = document.createElement('tr');
+            const meanArray = Array.isArray(item.mean) ? item.mean : [item.mean];
+            const meanHtml = `<ul class="mean-list">` + meanArray.map(m => `<li>${m}</li>`).join('') + `</ul>`;
+            
+            const movieTransHtml = item.movieTrans ? `<div style="color: var(--text-muted); font-size: 0.8rem; margin-top: 4px;">（訳）${item.movieTrans}</div>` : '';
+
+            tr.innerHTML = `
+                <td>
+                    <div class="word-info">
+                        <div class="clickable-word-area" onclick="speak('${item.word.replace(/'/g, "\\'")}', event)">
+                            <div class="word-title-container"><span class="word-title-text">${item.word}</span></div>
+                            <div class="pron">${item.pron}</div>
+                        </div>
+                        <div class="reveal-box reveal-mean" onclick="this.classList.toggle('hidden')">${meanHtml}</div>
+                    </div>
+                </td>
+                <td>
+                    <span class="usage-tag">[${item.tag}]</span>
+                    <div class="clickable-ex-area" onclick="speak('${item.aiex.replace(/'/g, "\\'")}', event)">
+                        <div class="ai-ex">${item.aiex}</div>
+                        <div class="trans-text">（訳）${item.aitrans}</div>
+                    </div>
+                    <div class="reveal-movie" onclick="playMovieLine(this, '${item.movie.replace(/'/g, "\\'")}', event)">
+                        "${item.movie}"
+                        ${movieTransHtml}
+                    </div>
+                </td>
+                <td>
+                    <!-- 3列目：ニュアンス移植デザイン -->
+                    <div class="origin-header">
+                        <span class="keyword-tone">${item.catchTone}</span>
+                        <span class="keyword-core">${item.catchCore}</span>
+                    </div>
+                    <div class="story-text">${item.originText}</div>
+                    <div class="nuance-box-a">
+                        <span class="nuance-label-a">💡 ニュアンス</span>
+                        <div class="nuance-text-a">${item.nuanceText}</div>
+                    </div>
+                </td>
+                <td>
+                    <!-- 4列目：関連マップ -->
+                    <div class="map-scroll-container">
+                        <div class="map-wrapper">
+                            <div class="node root-node" onclick="speak('${item.map.rootMain.split('(')[0].trim().replace(/'/g, "\\'")}', event)">
+                                <span class="root-main">${item.map.rootMain}</span>
+                                <span class="root-sub">${item.map.rootSub}</span>
+                            </div>
+                            ${buildTree(item.map.children)}
+                        </div>
+                    </div>
+                </td>
+            `;
+            tbody.appendChild(tr);
+        });
+        requestAnimationFrame(adjustWordSizes);
+    }
+    
+    createRows(midData, 'mid-list');
+    createRows(advData, 'adv-list');
+</script>
+</body>
+</html>
