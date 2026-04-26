@@ -1,0 +1,1217 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>予習テスト：Deep Study 4カラム版</title>
+    <style>
+        :root {
+            --bg-color: #0d1117; --container-bg: #161b22; --text-main: #c9d1d9; --text-muted: #8b949e;
+            --accent-blue: #58a6ff; --accent-orange: #f0883e; --accent-green: #3fb950; --accent-red: #ff7b72;
+            --border: #30363d; --tree-line: #484f58;
+        }
+
+        body {
+            background-color: var(--bg-color); color: var(--text-main);
+            font-family: 'Segoe UI', sans-serif; margin: 0; padding: 20px; padding-bottom: 80px; 
+            overflow-x: auto; /* ブラウザ全体の横スクロールを有効化 */
+        }
+
+        .container { width: 1700px; margin: 0 auto; } /* テーブル全体の幅を強制固定 */
+        
+        .header-container {
+            display: flex; justify-content: space-between; align-items: center;
+            margin-top: 10px; margin-bottom: 20px; width: 100%;
+        }
+        
+        #page-title { font-size: 1.5rem; letter-spacing: 2px; margin: 0; color: #fff; }
+
+        .controls-panel { display: flex; gap: 15px; }
+        .control-group {
+            display: flex; align-items: center; gap: 6px;
+            background: rgba(255,255,255,0.05); padding: 5px 10px; border-radius: 6px; border: 1px solid var(--border);
+        }
+        .control-group label { font-size: 0.75rem; color: var(--text-muted); font-weight: bold; }
+        .control-group select {
+            background: var(--bg-color); color: var(--text-main); border: 1px solid var(--border);
+            border-radius: 4px; padding: 2px 5px; font-size: 0.75rem; outline: none; cursor: pointer;
+        }
+
+        .level-label { display: inline-block; padding: 8px 16px; font-weight: bold; border-radius: 8px 8px 0 0; font-size: 0.8rem; margin-top: 10px; }
+        .bg-mid { background-color: var(--accent-blue); color: #000; }
+        .bg-adv { background-color: var(--accent-orange); color: #000; }
+        
+        table { width: 100%; border-collapse: collapse; background-color: var(--container-bg); border-radius: 0 12px 12px 12px; table-layout: fixed; box-shadow: 0 10px 30px rgba(0,0,0,0.5); }
+        
+        /* 4列の黄金比設定 */
+        .col-info { width: 14%; }    /* 基本 */
+        .col-context { width: 22%; } /* 例文 */
+        .col-nuance { width: 26%; }  /* ニュアンス（移植デザイン用） */
+        .col-map { width: 38%; }     /* 関連（画面右外へ） */
+
+        th, td { padding: 18px; border-bottom: 1px solid var(--border); vertical-align: middle; word-break: break-word; }
+        th { background-color: #090c10; color: var(--text-muted); font-size: 0.7rem; text-transform: uppercase; text-align: left; letter-spacing: 0.1em; }
+
+        /* 1列目：基本情報のオートスケール設定 */
+        .word-info { --scale: 1; display: flex; flex-direction: column; gap: calc(6px * var(--scale)); width: 100%; }
+        .clickable-word-area { display: flex; flex-direction: column; gap: 4px; width: 100%; box-sizing: border-box; cursor: pointer; padding: 6px 8px; margin-left: -8px; border-radius: 6px; transition: 0.2s ease; }
+        .clickable-word-area:hover { background-color: rgba(255, 255, 255, 0.08); box-shadow: inset 0 0 8px rgba(255, 255, 255, 0.05); }
+        .word-title-container { display: flex; align-items: center; width: 100%; justify-content: flex-start; gap: 8px; }
+        .word-title-text { font-size: calc(1.25rem * var(--scale)); font-weight: bold; color: #fff; white-space: nowrap; }
+        .pron { color: var(--accent-blue); font-size: calc(0.85rem * var(--scale)); font-family: monospace; }
+        .reveal-mean { display: block; border-radius: 6px; padding: calc(10px * var(--scale)); cursor: pointer; text-align: left; font-size: calc(0.9rem * var(--scale)); line-height: 1.5; background: transparent; color: var(--accent-green); font-weight: bold; transition: 0.3s; }
+        .reveal-mean.hidden { color: transparent; text-shadow: 0 0 10px rgba(63, 185, 80, 0.6); background-color: #21262d; font-weight: normal; }
+        .mean-list { list-style: none; padding-left: 0; margin: 0; }
+        .mean-list li { text-indent: -1em; padding-left: 1em; margin-bottom: 2px; }
+        .mean-list li::before { content: '▸ '; }
+
+        /* 2列目：例文エリア */
+        .usage-tag { font-weight: bold; color: var(--text-muted); font-size: 0.7rem; padding: 2px 8px; border: 1px solid var(--border); border-radius: 4px; display: inline-block; margin-bottom: 8px; background: rgba(255,255,255,0.03); }
+        .clickable-ex-area { display: block; cursor: pointer; padding: 6px 10px; margin-left: -10px; margin-bottom: 8px; border-radius: 6px; transition: 0.2s; }
+        .clickable-ex-area:hover { background-color: rgba(255, 255, 255, 0.08); }
+        .ai-ex { color: #fff; font-size: 1rem; font-weight: 500; line-height: 1.4; display: block; margin-bottom: 4px; }
+        .trans-text { font-size: 0.85rem; color: var(--accent-blue); line-height: 1.4; font-weight: bold; }
+        .reveal-movie { display: inline-block; width: 100%; box-sizing: border-box; padding: 10px; border-left: 3px solid var(--accent-red); background: rgba(255,123,114,0.05); font-style: italic; color: var(--accent-red); cursor: pointer; filter: blur(4px); transition: filter 0.4s, background-color 0.2s; font-size: 0.85rem; }
+        .reveal-movie.revealed { filter: blur(0); background: rgba(255,123,114,0.05); }
+        .reveal-movie.revealed:hover { background: rgba(255,123,114,0.12); }
+
+        /* 3列目：ニュアンス列（パターンA移植デザイン） */
+        .origin-header { display: flex; align-items: baseline; gap: 8px; margin-bottom: 10px; padding-bottom: 8px; border-bottom: 1px dashed var(--border); }
+        .keyword-tone { color: var(--accent-blue); font-weight: bold; font-size: 0.85rem; }
+        .keyword-core { color: var(--text-main); font-size: 0.85rem; font-weight: bold; }
+        .story-text { color: var(--text-muted); font-size: 0.85rem; line-height: 1.6; }
+        .hl-word { color: var(--accent-orange); font-weight: bold; border-bottom: 1px dashed var(--accent-orange); }
+        .nuance-box-a { position: relative; margin-top: 15px; border: 1px solid var(--accent-blue); border-radius: 6px; background: rgba(88, 166, 255, 0.05); padding: 12px 15px; }
+        .nuance-label-a { position: absolute; top: -10px; left: 12px; background: var(--container-bg); padding: 0 6px; color: var(--accent-blue); font-size: 0.7rem; font-weight: bold; letter-spacing: 1px; }
+        .nuance-text-a { color: #fff; font-size: 0.85rem; font-weight: bold; line-height: 1.5; }
+
+        /* 4列目：関連（ツリー） */
+        .map-scroll-container { border: 1px solid var(--border); border-radius: 10px; background: transparent; padding: 15px; overflow-x: auto; }
+        .map-wrapper { display: flex; align-items: center; gap: 20px; min-width: max-content; }
+        .node { padding: 8px 14px; border-radius: 50px; border: 1px solid var(--tree-line); background: rgba(255,255,255,0.05); font-size: 0.75rem; white-space: nowrap; display: flex; align-items: center; gap: 5px; color: var(--text-main); cursor: pointer; transition: 0.2s; }
+        .node:hover { background-color: rgba(255,255,255,0.15); }
+        .root-node { flex-direction: column; align-items: center; justify-content: center; border: 2px solid var(--accent-orange); background: rgba(240, 136, 62, 0.1); color: var(--accent-orange); line-height: 1.2; }
+        .root-node:hover { background-color: rgba(240, 136, 62, 0.2); box-shadow: 0 0 12px rgba(240, 136, 62, 0.3); }
+        .main-node { color: var(--accent-blue); font-weight: bold; border-color: var(--accent-blue); background: rgba(88, 166, 255, 0.05); }
+        .main-node:hover { background-color: rgba(88, 166, 255, 0.15); box-shadow: 0 0 12px rgba(88, 166, 255, 0.3); }
+        .branch-container { display: flex; flex-direction: column; gap: 10px; position: relative; padding-left: 25px; }
+        .branch-container::before { content: ''; position: absolute; left: 0; top: 15px; bottom: 15px; width: 1px; background: var(--tree-line); }
+        .node-row { display: flex; align-items: center; position: relative; }
+        .node-row::before { content: ''; position: absolute; left: -25px; top: 50%; width: 25px; height: 1px; background: var(--tree-line); }
+        
+        .play-btn { background: transparent; border: 1px solid var(--border); color: var(--text-muted); border-radius: 4px; padding: 0 5px; cursor: pointer; font-size: 0.6rem; height: 1.5em; display: none; } /* 再生ボタン自体は非表示、エリアクリックで対応 */
+    </style>
+</head>
+<body>
+
+<div class="container">
+    
+    <div class="header-container">
+        <h2 id="page-title">学習単語リスト</h2>
+        <div class="controls-panel">
+            <div class="control-group">
+                <label for="rate-select">Speed:</label>
+                <select id="rate-select">
+                    <option value="0.5">0.5x</option><option value="0.7">0.7x</option><option value="0.9">0.9x</option>
+                    <option value="1.0" selected>1.0x</option><option value="1.2">1.2x</option><option value="1.5">1.5x</option>
+                </select>
+            </div>
+            <div class="control-group"><label for="voice-select">Voice:</label><select id="voice-select"></select></div>
+        </div>
+    </div>
+
+    <div class="level-label bg-mid">中級</div>
+    <table>
+        <thead>
+            <tr>
+                <th class="col-info">単語基本情報</th>
+                <th class="col-context">ニュアンス・例文</th>
+                <th class="col-nuance">語源と深層ニュアンス</th>
+                <th class="col-map">関連表現（マップ）</th>
+            </tr>
+        </thead>
+        <tbody id="mid-list"></tbody>
+    </table>
+
+    <div class="level-label bg-adv">上級</div>
+    <table>
+        <thead>
+            <tr>
+                <th class="col-info">単語基本情報</th>
+                <th class="col-context">ニュアンス・例文</th>
+                <th class="col-nuance">語源と深層ニュアンス</th>
+                <th class="col-map">関連表現（マップ）</th>
+            </tr>
+        </thead>
+        <tbody id="adv-list"></tbody>
+    </table>
+</div>
+
+<!-- データ注入用スクリプト -->
+<script id="ai-data"></script>
+
+<script>
+    /* =========================================================
+       ここに抽出チャットが作成したデータをコピペする
+       ========================================================= */
+const movieTitle = "Sense8 S2E2";
+
+const midData = [
+  {
+    "word": "underestimate",
+    "pron": "/ˌʌndərˈestɪmeɪt/",
+    "mean": ["過小評価する", "甘く見る"],
+    "tag": "[警告 / 分析]",
+    "aiex": "Never underestimate your opponent.",
+    "aitrans": "相手を決して甘く見てはいけない。",
+    "movie": "You should not underestimate Whispers.",
+    "movieTrans": "ウィスパーズを過小評価すべきじゃないわ。",
+    "catchTone": "【甘い見立ての落とし穴】",
+    "catchCore": "基準の下で見積もる",
+    "originText": "<span class=\"hl-word\">Under（下に）</span>と<span class=\"hl-word\">Estimate（見積もる）</span>が合わさり、本来の価値より低く見積もることを表す。",
+    "nuanceText": "能力や危険性を実際よりも低いと判断してしまう状況で使われ、しばしば失敗の前兆として警告の意味を込めて用いられる。",
+    "map": {
+      "rootMain": "Estimate",
+      "rootSub": "(価値を測る)",
+      "children": [
+        { "text": "Estimate : 見積もる、評価する（動）" },
+        { "text": "Estimation : 評価、判断（名）" },
+        { "text": "Underestimate : 過小評価する（動）", "isMain": true },
+        { "text": "Overestimate : 過大評価する（動）" },
+        { "text": "Inestimable : 計り知れない（形）" }
+      ]
+    }
+  },
+  {
+    "word": "stakeout",
+    "pron": "/ˈsteɪkaʊt/",
+    "mean": ["張り込み", "監視"],
+    "tag": "[警察・捜査 / 忍耐]",
+    "aiex": "The police are on a stakeout.",
+    "aitrans": "警察が張り込みをしている。",
+    "movie": "This is a classic stakeout.",
+    "movieTrans": "これぞ典型的な張り込みだな。",
+    "catchTone": "【獲物を待つ静かな監視】",
+    "catchCore": "杭を打って場所を確保する",
+    "originText": "<span class=\"hl-word\">Stake（杭）</span>を<span class=\"hl-word\">Out（外に）</span>打って、自分の領域を確保して見張る様子が由来。",
+    "nuanceText": "犯罪者や特定の人物を捕まえるために、特定の場所で長時間じっと監視を続ける警察用語的な響きがある。",
+    "map": {
+      "rootMain": "Stake",
+      "rootSub": "(杭 / 領域)",
+      "children": [
+        { "text": "Stake : 杭、賭け金（名）" },
+        { "text": "Stakeout : 張り込み（名）", "isMain": true },
+        { "text": "At stake : 賭けられて、危機に瀕して（熟語）" },
+        { "text": "Sweepstake : 懸賞、くじ（名）" }
+      ]
+    }
+  },
+  {
+    "word": "have in common",
+    "pron": "/hæv ɪn ˈkɒmən/",
+    "mean": ["共通点がある", "共通して持っている"],
+    "tag": "[親近感 / 比較]",
+    "aiex": "We have a lot in common.",
+    "aitrans": "私たちには共通点がたくさんある。",
+    "movie": "What do we have in common?",
+    "movieTrans": "俺たちにどんな共通点があるってんだ？",
+    "catchTone": "【重なり合う点】",
+    "catchCore": "共通の領域に持つ",
+    "originText": "<span class=\"hl-word\">Common（共通の・公共の）</span>という場所の中に、何かを<span class=\"hl-word\">Have（持っている）</span>状態を表す。",
+    "nuanceText": "趣味、性格、背景などが一致していることを指す。人だけでなく、事象や物の特徴の比較にも使われる。",
+    "map": {
+      "rootMain": "Common",
+      "rootSub": "(共通 / 普通)",
+      "children": [
+        { "text": "Common : 共通の、一般的な（形）" },
+        { "text": "Commonly : 一般に（副）" },
+        { "text": "Have in common : 共通点がある（熟語）", "isMain": true },
+        { "text": "Common sense : 常識（名）" },
+        { "text": "Commonplace : ありふれた（形）" }
+      ]
+    }
+  },
+  {
+    "word": "keep someone up at night",
+    "pron": "/kiːp ˈsʌmwʌn ʌp æt naɪt/",
+    "mean": ["(心配事で)眠らせない", "夜通し起きさせておく"],
+    "tag": "[悩み / 執着]",
+    "aiex": "Financial worries keep me up at night.",
+    "aitrans": "お金の心配で夜も眠れない。",
+    "movie": "It's what keeps him up at night.",
+    "movieTrans": "それが彼を夜通し悩ませている原因だ。",
+    "catchTone": "【暗闇で冴え渡る不安】",
+    "catchCore": "人を起きた状態に保つ",
+    "originText": "<span class=\"hl-word\">Keep up（起きたままにする）</span>という状態を、<span class=\"hl-word\">At night（夜に）</span>強いることが語源。",
+    "nuanceText": "単に起きているのではなく、恐怖、興奮、あるいは解決できない悩みなどが原因で「眠りたくても眠れない」という苦しさを強調する。",
+    "map": {
+      "rootMain": "Keep up",
+      "rootSub": "(維持 / 起床)",
+      "children": [
+        { "text": "Keep up : 続ける、起きている（動）" },
+        { "text": "Stay up : 寝ずに起きている（動）" },
+        { "text": "Keep someone up at night : 眠らせない（熟語）", "isMain": true },
+        { "text": "Insomnia : 不眠症（名）" }
+      ]
+    }
+  },
+  {
+    "word": "be in charge of",
+    "pron": "/biː ɪn tʃɑːrdʒ əv/",
+    "mean": ["〜を担当している", "〜の責任者である"],
+    "tag": "[責任 / 役割]",
+    "aiex": "Who is in charge of this project?",
+    "aitrans": "このプロジェクトの責任者は誰ですか？",
+    "movie": "You are in charge of security.",
+    "movieTrans": "君が警備の責任者だな。",
+    "catchTone": "【舵取りのポジション】",
+    "catchCore": "重荷（責任）を背負っている中にある",
+    "originText": "<span class=\"hl-word\">Charge（荷、負担、責任）</span>の中に<span class=\"hl-word\">In（いる）</span>ことから、管理下にあることを示す。",
+    "nuanceText": "ビジネスシーンで頻出。単なる作業担当ではなく、決定権や責任を持つ立場であることを明確にする表現。",
+    "map": {
+      "rootMain": "Charge",
+      "rootSub": "(充電 / 負担 / 請求)",
+      "children": [
+        { "text": "Charge : 請求する、充電する（動）" },
+        { "text": "In charge of : 〜を担当して（熟語）", "isMain": true },
+        { "text": "Take charge : 指揮を執る（動）" },
+        { "text": "Discharge : 解放する、排出する（動）" },
+        { "text": "Free of charge : 無料で（形）" }
+      ]
+    }
+  },
+  {
+    "word": "amateur",
+    "pron": "/ˈæmətər/",
+    "mean": ["素人", "アマチュア"],
+    "tag": "[皮肉 / 評価]",
+    "aiex": "Don't be such an amateur.",
+    "aitrans": "そんな素人みたいな真似はやめろ。",
+    "movie": "This looks like amateur work.",
+    "movieTrans": "これは素人の仕業に見えるな。",
+    "catchTone": "【プロには及ばぬ未熟さ】",
+    "catchCore": "愛好する人",
+    "originText": "ラテン語の<span class=\"hl-word\">Amare（愛する）</span>が語源。報酬のためではなく「好きでやっている人」を指すようになった。",
+    "nuanceText": "単に「非専門家」を指すこともあるが、文脈によっては「やり方が下手」「未熟」というネガティブな皮肉として使われることが多い。",
+    "map": {
+      "rootMain": "Am",
+      "rootSub": "(愛する)",
+      "children": [
+        { "text": "Amateur : アマチュア、素人（名・形）", "isMain": true },
+        { "text": "Amiable : 愛想の良い（形）" },
+        { "text": "Amicable : 友好的な（形）" },
+        { "text": "Amorous : 多情な、恋愛の（形）" }
+      ]
+    }
+  },
+  {
+    "word": "get well",
+    "pron": "/ɡet wel/",
+    "mean": ["回復する", "元気になる"],
+    "tag": "[気遣い / 健康]",
+    "aiex": "I hope you get well soon.",
+    "aitrans": "早く良くなってね。",
+    "movie": "I need you to get well.",
+    "movieTrans": "あなたに元気になってもらわないと困るの。",
+    "catchTone": "【快方に向かう変化】",
+    "catchCore": "良い状態を手に入れる",
+    "originText": "<span class=\"hl-word\">Get（〜の状態になる）</span>と<span class=\"hl-word\">Well（健康な・良い）</span>が組み合わさり、健康を取り戻すプロセスを表す。",
+    "nuanceText": "病気や怪我からの回復を願う定番のフレーズ。日常会話からお見舞いカードまで幅広く使われる。",
+    "map": {
+      "rootMain": "Well",
+      "rootSub": "(良く / 健康)",
+      "children": [
+        { "text": "Well : 良く、上手に（副）" },
+        { "text": "Get well : 回復する（動）", "isMain": true },
+        { "text": "Wellness : 健康（名）" },
+        { "text": "Well-being : 幸福、健康（名）" }
+      ]
+    }
+  },
+  {
+    "word": "ought to",
+    "pron": "/ˈɔːt tu/",
+    "mean": ["〜すべきである", "〜するはずだ"],
+    "tag": "[助言 / 推測]",
+    "aiex": "You ought to tell the truth.",
+    "aitrans": "本当のことを言うべきだよ。",
+    "movie": "We ought to be careful.",
+    "movieTrans": "慎重になるべきだ。",
+    "catchTone": "【当然の義務と道理】",
+    "catchCore": "〜に対して負債がある(べきだ)",
+    "originText": "<span class=\"hl-word\">Owe（借りがある）</span>の過去形に由来し、道徳的・論理的に「そうするのが当然」というニュアンスを持つ。",
+    "nuanceText": "shouldとほぼ同じだが、ought toの方が「義務感」や「客観的な正当性」がやや強く響く。また「〜のはずだ」という強い推測も表す。",
+    "map": {
+      "rootMain": "Ought",
+      "rootSub": "(義務 / 負債)",
+      "children": [
+        { "text": "Ought to : 〜すべきだ（助）", "isMain": true },
+        { "text": "Should : 〜すべきだ（助）" },
+        { "text": "Owe : 借りがある（動）" },
+        { "text": "Duty : 義務（名）" }
+      ]
+    }
+  },
+  {
+    "word": "accomplish",
+    "pron": "/əˈkʌmplɪʃ/",
+    "mean": ["成し遂げる", "達成する"],
+    "tag": "[達成 / 完遂]",
+    "aiex": "We can accomplish anything together.",
+    "aitrans": "私たちなら何でも成し遂げられる。",
+    "movie": "What are you trying to accomplish?",
+    "movieTrans": "何を成し遂げようとしているんだ？",
+    "catchTone": "【満たされた完結】",
+    "catchCore": "完全に満たす",
+    "originText": "<span class=\"hl-word\">Ad-（〜へ）</span>と<span class=\"hl-word\">Comple（満たす）</span>が語源。目的を最後まで満たしきることを表す。",
+    "nuanceText": "努力を要する目標や計画を、最後までやり遂げるというフォーマルでポジティブな響き。単なるfinishよりも達成感が強い。",
+    "map": {
+      "rootMain": "Ple",
+      "rootSub": "(満たす)",
+      "children": [
+        { "text": "Complete : 完全な、完了する（形・動）" },
+        { "text": "Accomplish : 成し遂げる（動）", "isMain": true },
+        { "text": "Accomplishment : 成就、実績（名）" },
+        { "text": "Supplement : 補う（動）" },
+        { "text": "Replenish : 補充する（動）" }
+      ]
+    }
+  },
+  {
+    "word": "blackmail",
+    "pron": "/ˈblækmeɪl/",
+    "mean": ["脅迫する", "ゆする"],
+    "tag": "[犯罪 / 策略]",
+    "aiex": "He tried to blackmail the CEO.",
+    "aitrans": "彼はCEOを脅迫しようとした。",
+    "movie": "Are you trying to blackmail me?",
+    "movieTrans": "私を脅そうというのか？",
+    "catchTone": "【闇の代償】",
+    "catchCore": "不当な税金・支払い",
+    "originText": "<span class=\"hl-word\">Black（黒い・不当な）</span>と<span class=\"hl-word\">Mail（貢物・税）</span>が組み合わさり、弱みに付け込んで金を要求することを指すようになった。",
+    "nuanceText": "秘密を暴露すると脅して、金銭や特定の行動を強要する場合に使われる。名詞（脅迫）としても動詞としても機能する。",
+    "map": {
+      "rootMain": "Blackmail",
+      "rootSub": "(不当な強要)",
+      "children": [
+        { "text": "Blackmail : 脅迫（名・動）", "isMain": true },
+        { "text": "Threaten : 脅す（動）" },
+        { "text": "Extort : ゆする（動）" },
+        { "text": "Ransom : 身代金（名）" }
+      ]
+    }
+  },
+  {
+    "word": "a great deal of",
+    "pron": "/ə ɡreɪt diːl əv/",
+    "mean": ["多量の", "たくさんの"],
+    "tag": "[強調 / 程度]",
+    "aiex": "It takes a great deal of time.",
+    "aitrans": "それにはかなりの時間がかかる。",
+    "movie": "It caused a great deal of trouble.",
+    "movieTrans": "それは多大な迷惑をかけた。",
+    "catchTone": "【どっさりと重い量】",
+    "catchCore": "大きな分配・分量",
+    "originText": "<span class=\"hl-word\">Deal（分け前、量）</span>が<span class=\"hl-word\">Great（大きい）</span>状態であることを示す。",
+    "nuanceText": "不可算名詞（time, effort, moneyなど）に使われ、very muchよりも「かなりの、相当な」といった重みのある強調表現。",
+    "map": {
+      "rootMain": "Deal",
+      "rootSub": "(分量 / 取引)",
+      "children": [
+        { "text": "Deal : 取引、分量（名）" },
+        { "text": "A great deal of : 多量の（熟語）", "isMain": true },
+        { "text": "Dealer : 販売業者（名）" },
+        { "text": "Deal with : 対処する（動）" }
+      ]
+    }
+  },
+  {
+    "word": "creep around",
+    "pron": "/kriːp əˈraʊnd/",
+    "mean": ["こっそり歩き回る", "忍び歩く"],
+    "tag": "[密行 / 怪しい動作]",
+    "aiex": "Stop creeping around in the dark.",
+    "aitrans": "暗闇の中をこっそり歩き回るのはやめて。",
+    "movie": "I saw someone creeping around the house.",
+    "movieTrans": "誰かが家の周りをうろついているのを見たんだ。",
+    "catchTone": "【忍び寄る不気味な影】",
+    "catchCore": "這うように動く",
+    "originText": "<span class=\"hl-word\">Creep（這う）</span>ように周囲を<span class=\"hl-word\">Around（ぐるりと）</span>動き回る様子が語源。",
+    "nuanceText": "誰かに見つからないように、音を立てずに移動する様子。不法侵入者や怪しい人物の行動を描写する際によく使われる。",
+    "map": {
+      "rootMain": "Creep",
+      "rootSub": "(這う / 忍び寄る)",
+      "children": [
+        { "text": "Creep : 忍び寄る（動）" },
+        { "text": "Creepy : 不気味な（形）" },
+        { "text": "Creep around : 忍び歩く（動）", "isMain": true },
+        { "text": "Give me the creeps : ぞっとさせる（熟語）" }
+      ]
+    }
+  },
+  {
+    "word": "unacceptable",
+    "pron": "/ˌʌnəkˈseptəbl/",
+    "mean": ["受け入れられない", "容認できない"],
+    "tag": "[拒絶 / 強い否定]",
+    "aiex": "Your behavior is completely unacceptable.",
+    "aitrans": "君の振る舞いは断じて受け入れられない。",
+    "movie": "Failure is simply unacceptable.",
+    "movieTrans": "失敗は絶対に許されない。",
+    "catchTone": "【断固拒否の境界線】",
+    "catchCore": "受け取ることができない",
+    "originText": "<span class=\"hl-word\">Un-（否定）</span>+ <span class=\"hl-word\">Accept（受け入れる）</span>+ <span class=\"hl-word\">-able（できる）</span>の組み合わせ。",
+    "nuanceText": "単に嫌いなだけでなく、ルールや道徳、期待される基準に達していないために「承認できない」という強い不満や拒絶を表す。",
+    "map": {
+      "rootMain": "Cept",
+      "rootSub": "(取る / つかむ)",
+      "children": [
+        { "text": "Accept : 受け入れる（動）" },
+        { "text": "Acceptable : 許容できる（形）" },
+        { "text": "Unacceptable : 容認できない（形）", "isMain": true },
+        { "text": "Except : 除いて（前）" },
+        { "text": "Concept : 概念（名）" }
+      ]
+    }
+  },
+  {
+    "word": "critical",
+    "pron": "/ˈkrɪtɪkl/",
+    "mean": ["批判的な", "極めて重要な", "危篤の"],
+    "tag": "[分析 / 緊急]",
+    "aiex": "This is a critical situation.",
+    "aitrans": "これは危機的な状況だ。",
+    "movie": "Don't be so critical of yourself.",
+    "movieTrans": "そんなに自分を責める（批判する）なよ。",
+    "catchTone": "【運命を分ける見極め】",
+    "catchCore": "分ける、判断する",
+    "originText": "ギリシャ語の<span class=\"hl-word\">Kritikos（判断できる）</span>が語源。物事の良し悪しを分ける境界線にいることを示す。",
+    "nuanceText": "「批判的」という意味と「死活的に重要（クリティカル）」という意味の両方で使われる。共通するのは「判断が求められる重要な局面」という重み。",
+    "map": {
+      "rootMain": "Crit",
+      "rootSub": "(分ける / 判断)",
+      "children": [
+        { "text": "Critic : 批評家（名）" },
+        { "text": "Criticize : 批判する（動）" },
+        { "text": "Critical : 決定的な、批判的な（形）", "isMain": true },
+        { "text": "Criterion : 基準（名）" },
+        { "text": "Crisis : 危機（名）" }
+      ]
+    }
+  },
+  {
+    "word": "exaggerate",
+    "pron": "/ɪɡˈzædʒəreɪt/",
+    "mean": ["誇張する", "大げさに言う"],
+    "tag": "[盛り / 皮肉]",
+    "aiex": "I'm not exaggerating, it was huge!",
+    "aitrans": "大げさに言ってるんじゃない、本当に大きかったんだ！",
+    "movie": "She tends to exaggerate things.",
+    "movieTrans": "彼女は物事を大げさに言う傾向がある。",
+    "catchTone": "【積み増された真実】",
+    "catchCore": "山のように積み上げる",
+    "originText": "<span class=\"hl-word\">Ex-（外に）</span>+ <span class=\"hl-word\">Aggerare（積み上げる）</span>が語源。事実の上にさらに言葉を盛り上げる様子。",
+    "nuanceText": "事実を実際よりも大きく、良く、または悪く見せようとする行為。嘘というよりは「盛りすぎ」というニュアンス。",
+    "map": {
+      "rootMain": "Ger",
+      "rootSub": "(運ぶ / 積む)",
+      "children": [
+        { "text": "Exaggerate : 誇張する（動）", "isMain": true },
+        { "text": "Exaggeration : 誇張（名）" },
+        { "text": "Congest : 混雑させる（動）" },
+        { "text": "Suggest : 提案する（動）" }
+      ]
+    }
+  },
+  {
+    "word": "on fire",
+    "pron": "/ɒn ˈfaɪər/",
+    "mean": ["燃えている", "絶好調である"],
+    "tag": "[熱狂 / 状態]",
+    "aiex": "He is on fire today!",
+    "aitrans": "今日の彼は絶好調だね！",
+    "movie": "The building is on fire.",
+    "movieTrans": "ビルが燃えているぞ。",
+    "catchTone": "【燃え盛る勢い】",
+    "catchCore": "火がついた状態の上にある",
+    "originText": "<span class=\"hl-word\">Fire（火）</span>の<span class=\"hl-word\">On（上に・接触して）</span>あることから、燃焼している状態を示す。",
+    "nuanceText": "物理的な火災だけでなく、スポーツや仕事で神がかったパフォーマンスを見せている「絶好調」な状態を指すスラングとしても非常に一般的。",
+    "map": {
+      "rootMain": "Fire",
+      "rootSub": "(火 / 勢い)",
+      "children": [
+        { "text": "Fire : 火、発砲する、解雇する（名・動）" },
+        { "text": "On fire : 燃えている、絶好調（熟語）", "isMain": true },
+        { "text": "Firefighter : 消防士（名）" },
+        { "text": "Fireproof : 耐火の（形）" },
+        { "text": "Catch fire : 火がつく（動）" }
+      ]
+    }
+  },
+  {
+    "word": "vulnerability",
+    "pron": "/ˌvʌlnərəˈbɪləti/",
+    "mean": ["脆弱性", "弱さ", "傷つきやすさ"],
+    "tag": "[内面 / 弱点]",
+    "aiex": "She showed her vulnerability to him.",
+    "aitrans": "彼女は彼に自分の弱さを見せた。",
+    "movie": "We need to exploit their vulnerability.",
+    "movieTrans": "彼らの弱みに付け込む必要がある。",
+    "catchTone": "【むき出しの急所】",
+    "catchCore": "傷つけることができること",
+    "originText": "ラテン語の<span class=\"hl-word\">Vulnus（傷）</span>が語源。攻撃に対して防御が不十分で、傷つきやすい性質を指す。",
+    "nuanceText": "ITのセキュリティ的な「欠陥」という意味から、人間関係における「心の脆さ」まで幅広く使われる。単なるweaknessより「傷を受けやすい」という受動的なニュアンスが強い。",
+    "map": {
+      "rootMain": "Vuln",
+      "rootSub": "(傷)",
+      "children": [
+        { "text": "Vulnerable : 傷つきやすい（形）" },
+        { "text": "Vulnerability : 脆弱性、弱さ（名）", "isMain": true },
+        { "text": "Invulnerable : 不死身の、無敵の（形）" }
+      ]
+    }
+  },
+  {
+    "word": "jerk",
+    "pron": "/dʒɜːrk/",
+    "mean": ["嫌なやつ", "無神経な男"],
+    "tag": "[罵倒 / 本音]",
+    "aiex": "Don't be such a jerk.",
+    "aitrans": "そんな嫌なやつになるなよ。",
+    "movie": "My boss is a total jerk.",
+    "movieTrans": "うちのボスは本当にサイテーなんだ。",
+    "catchTone": "【苛立ちを誘う愚か者】",
+    "catchCore": "急激に引く、痙攣する",
+    "originText": "もともとは「急に動かす」という意味。そこから「自分勝手で無神経な動き（行動）をする者」への蔑称に発展した。",
+    "nuanceText": "主に男性に対して使われる。悪党（villain）というほどではないが、自己中心的で周りをイライラさせる失礼なやつ、というニュアンス。",
+    "map": {
+      "rootMain": "Jerk",
+      "rootSub": "(急な動き / 嫌な奴)",
+      "children": [
+        { "text": "Jerk : 嫌なやつ、急な動き（名）", "isMain": true },
+        { "text": "Jerk around : 振り回す、からかう（動）" },
+        { "text": "Knee-jerk : 膝蓋腱反射の、反射的な（形）" },
+        { "text": "Jerky : 急に動く、ビーフジャーキー（形・名）" }
+      ]
+    }
+  },
+  {
+    "word": "pull the offer",
+    "pron": "/pʊl ði ˈɒfər/",
+    "mean": ["申し出を撤回する", "内定を取り消す"],
+    "tag": "[ビジネス / 交渉]",
+    "aiex": "They might pull the offer if we wait.",
+    "aitrans": "待たせすぎると彼らは申し出を引っ込めるかもしれない。",
+    "movie": "If you don't agree, I'll pull the offer.",
+    "movieTrans": "同意しないなら、この話（オファー）はなしだ。",
+    "catchTone": "【差し出した手の回収】",
+    "catchCore": "提供したものを手前に引く",
+    "originText": "提示（offer）していたものを、自分の手元に<span class=\"hl-word\">Pull（引く）</span>戻す動作から。",
+    "nuanceText": "交渉において、一度出した条件やチャンスを「なかったことにする」という強い姿勢を示す表現。",
+    "map": {
+      "rootMain": "Pull",
+      "rootSub": "(引く / 撤退)",
+      "children": [
+        { "text": "Pull : 引く（動）" },
+        { "text": "Pull the offer : 申し出を撤回する（熟語）", "isMain": true },
+        { "text": "Pull out : 撤退する（動）" },
+        { "text": "Pull back : 交代する、下がる（動）" },
+        { "text": "Withdraw : 撤回する、引き出す（動）" }
+      ]
+    }
+  },
+  {
+    "word": "invoke",
+    "pron": "/ɪnˈvoʊk/",
+    "mean": ["(法などを)発動する", "呼び覚ます"],
+    "tag": "[公的 / 専門的]",
+    "aiex": "The government invoked the emergency law.",
+    "aitrans": "政府は緊急事態法を発動した。",
+    "movie": "We have to invoke the protocol.",
+    "movieTrans": "プロトコル（規定）を発動させなければならない。",
+    "catchTone": "【眠れる力の召喚】",
+    "catchCore": "中に向かって呼ぶ",
+    "originText": "<span class=\"hl-word\">In-（中に）</span>+ <span class=\"hl-word\">Voke（呼ぶ）</span>。権威のあるものや助けを呼び出すことが語源。",
+    "nuanceText": "法律、条項、権利などを行使する際や、神や精霊の助けを求める際、あるいは感情や記憶を呼び起こす際に使われる硬い表現。",
+    "map": {
+      "rootMain": "Vok / Voc",
+      "rootSub": "(声 / 呼ぶ)",
+      "children": [
+        { "text": "Voice : 声（名）" },
+        { "text": "Invoke : 発動する、呼び出す（動）", "isMain": true },
+        { "text": "Provoke : 怒らせる、引き起こす（動）" },
+        { "text": "Evoke : 呼び起こす、喚起する（動）" },
+        { "text": "Vocation : 天職、召命（名）" }
+      ]
+    }
+  },
+  {
+    "word": "morals clause",
+    "pron": "/ˈmɒrəlz klɔːz/",
+    "mean": ["道徳条項", "素行規定"],
+    "tag": "[契約 / 法的]",
+    "aiex": "He violated the morals clause in his contract.",
+    "aitrans": "彼は契約書の道徳条項に違反した。",
+    "movie": "We are invoking the morals clause.",
+    "movieTrans": "道徳条項を適用（発動）させてもらうよ。",
+    "catchTone": "【品行方正の縛り】",
+    "catchCore": "道徳に関する条項",
+    "originText": "<span class=\"hl-word\">Morals（道徳）</span>＋<span class=\"hl-word\">Clause（条項）</span>。著名人などの契約において、不祥事を起こした際に契約解除できる仕組み。",
+    "nuanceText": "エンタメ業界やスポーツ選手の契約でよく見られる。不倫、薬物、逮捕などの「イメージダウン」を理由にクビにするための法的根拠として使われる。",
+    "map": {
+      "rootMain": "Clause",
+      "rootSub": "(条項 / 閉じられた文)",
+      "children": [
+        { "text": "Clause : 条項、節（名）" },
+        { "text": "Morals clause : 道徳条項（名）", "isMain": true },
+        { "text": "Moral : 道徳的な（形）" },
+        { "text": "Ethic : 倫理（名）" }
+      ]
+    }
+  },
+  {
+    "word": "go after",
+    "pron": "/ɡoʊ ˈæftər/",
+    "mean": ["追いかける", "追求する"],
+    "tag": "[追跡 / 執着]",
+    "aiex": "The police went after the thief.",
+    "aitrans": "警察は泥棒を追いかけた。",
+    "movie": "They will go after everyone we love.",
+    "movieTrans": "あいつらは俺たちの愛する者全員を狙ってくるぞ。",
+    "catchTone": "【逃がさない追跡】",
+    "catchCore": "後ろから行く",
+    "originText": "対象の<span class=\"hl-word\">After（後ろ）</span>を<span class=\"hl-word\">Go（行く）</span>することで、捕まえようとしたり手に入れようとしたりする様子。",
+    "nuanceText": "物理的に追いかけるだけでなく、夢を追いかけたり、犯人を摘発しようとしたり、誰かを攻撃対象として狙う場合などにも幅広く使われる句動詞。",
+    "map": {
+      "rootMain": "Go",
+      "rootSub": "(行く / 進む)",
+      "children": [
+        { "text": "Go after : 追いかける、狙う（動）", "isMain": true },
+        { "text": "Go for : 目指す、好む（動）" },
+        { "text": "Go through : 経験する、通り抜ける（動）" },
+        { "text": "Follow : 後をついていく（動）" },
+        { "text": "Pursue : 追求する（動）" }
+      ]
+    }
+  },
+  {
+    "word": "fall in love",
+    "pron": "/fɔːl ɪn lʌv/",
+    "mean": ["恋に落ちる"],
+    "tag": "[恋愛 / 変化]",
+    "aiex": "They fell in love at first sight.",
+    "aitrans": "彼らは一目惚れした。",
+    "movie": "I didn't mean to fall in love.",
+    "movieTrans": "恋に落ちるつもりなんてなかったのに。",
+    "catchTone": "【不可抗力な急降下】",
+    "catchCore": "愛の中に落ちる",
+    "originText": "自分の意志ではなく、重力に逆らえず<span class=\"hl-word\">Fall（落ちる）</span>ように抗えない感情の渦の中に飛び込む様子。",
+    "nuanceText": "「好きになる」よりもドラマチックで、突然、あるいは避けられない感情の変化を強調する。in loveという「状態」へ入り込むイメージ。",
+    "map": {
+      "rootMain": "Fall",
+      "rootSub": "(落ちる / 変化)",
+      "children": [
+        { "text": "Fall : 落ちる、秋（動・名）" },
+        { "text": "Fall in love : 恋に落ちる（熟語）", "isMain": true },
+        { "text": "Fall apart : 崩壊する（動）" },
+        { "text": "Fall asleep : 眠りに落ちる（動）" },
+        { "text": "Befall : 降りかかる（動）" }
+      ]
+    }
+  },
+  {
+    "word": "carbs",
+    "pron": "/kɑːrbz/",
+    "mean": ["炭水化物", "糖質"],
+    "tag": "[日常 / 健康]",
+    "aiex": "I'm trying to cut down on carbs.",
+    "aitrans": "炭水化物を減らそうとしているんだ。",
+    "movie": "Are you eating carbs again?",
+    "movieTrans": "また炭水化物（糖質）食べてるの？",
+    "catchTone": "【誘惑のエネルギー】",
+    "catchCore": "炭素(Carbon)を含む化合物",
+    "originText": "<span class=\"hl-word\">Carbohydrates</span>の略語。現代の日常会話では、ダイエットや食事制限の文脈でこの略称が一般的。",
+    "nuanceText": "科学用語としての難しさはなく、「パン、麺、米」などの太りやすい食べ物を指すカジュアルな呼び方として定着している。",
+    "map": {
+      "rootMain": "Carb",
+      "rootSub": "(炭素)",
+      "children": [
+        { "text": "Carbs : 炭水化物（名）", "isMain": true },
+        { "text": "Carbon : 炭素（名）" },
+        { "text": "Carbonate : 炭酸塩（名）" },
+        { "text": "Low-carb : 低糖質の（形）" }
+      ]
+    }
+  },
+  {
+    "word": "visual",
+    "pron": "/ˈvɪʒuəl/",
+    "mean": ["視覚的な", "目に見える", "映像"],
+    "tag": "[感覚 / 表現]",
+    "aiex": "The movie has amazing visual effects.",
+    "aitrans": "その映画は素晴らしい視覚効果（VFX）を使っている。",
+    "movie": "I need a visual on the target.",
+    "movieTrans": "ターゲットを目視（確認）する必要がある。",
+    "catchTone": "【目に映る真実】",
+    "catchCore": "見る、視覚",
+    "originText": "ラテン語の<span class=\"hl-word\">Visus（見る）</span>が語源。言葉だけでなく、目で見て捉える要素を指す。",
+    "nuanceText": "形容詞として「視覚の」という意味で使われるほか、名詞（通例複数形）で「映像素材」「視覚情報」を指す。軍事や捜査では「目視での確認」を意味することもある。",
+    "map": {
+      "rootMain": "Vis / Vid",
+      "rootSub": "(見る)",
+      "children": [
+        { "text": "Vision : 視力、展望（名）" },
+        { "text": "Visit : 訪問する（動）" },
+        { "text": "Visual : 視覚的な（形）", "isMain": true },
+        { "text": "Visible : 目に見える（形）" },
+        { "text": "Evidence : 証拠（名）" }
+      ]
+    }
+  },
+  {
+    "word": "power down",
+    "pron": "/ˈpaʊər daʊn/",
+    "mean": ["電源を切る", "機能を停止させる"],
+    "tag": "[テクノロジー / 休息]",
+    "aiex": "Please power down your devices.",
+    "aitrans": "デバイスの電源を切ってください。",
+    "movie": "We need to power down the system.",
+    "movieTrans": "システムの電源を落とす必要がある。",
+    "catchTone": "【静かなるシャットダウン】",
+    "catchCore": "動力を下げる",
+    "originText": "<span class=\"hl-word\">Power（動力・電力）</span>を段階的に、あるいは完全に<span class=\"hl-word\">Down（下げる）</span>させる様子。",
+    "nuanceText": "単なるoffよりも、大規模なシステムや機械、あるいは比喩的に「人間が心身を休める」という文脈でも使われるかっこいい響きの表現。",
+    "map": {
+      "rootMain": "Power",
+      "rootSub": "(力 / 動力)",
+      "children": [
+        { "text": "Power down : 電源を切る（動）", "isMain": true },
+        { "text": "Power up : 起動する（動）" },
+        { "text": "Powerful : 強力な（形）" },
+        { "text": "Empower : 権限を与える（動）" }
+      ]
+    }
+  },
+  {
+    "word": "jammed",
+    "pron": "/dʒæmd/",
+    "mean": ["詰まった", "動かなくなった", "満員の"],
+    "tag": "[トラブル / 圧迫]",
+    "aiex": "The paper is jammed in the printer.",
+    "aitrans": "プリンターに紙が詰まっている。",
+    "movie": "The door is jammed!",
+    "movieTrans": "ドアが詰まって（動かなくて）開かない！",
+    "catchTone": "【身動きの取れない膠着】",
+    "catchCore": "押し込む、詰め込む",
+    "originText": "何かを無理やり押し込み、隙間がなくなって動けなくなる状態が語源。",
+    "nuanceText": "機械の故障（紙詰まりなど）だけでなく、交通渋滞（traffic jam）や、鍵がかかっていないのに建付けが悪くて開かないドア、あるいは人が多すぎて動けない場所に対しても使われる。",
+    "map": {
+      "rootMain": "Jam",
+      "rootSub": "(押し込む / 塞ぐ)",
+      "children": [
+        { "text": "Jam : 詰め込む、ジャム、渋滞（動・名）" },
+        { "text": "Jammed : 詰まった（形）", "isMain": true },
+        { "text": "Traffic jam : 交通渋滞（名）" },
+        { "text": "Jam-packed : ぎっしり詰まった（形）" }
+      ]
+    }
+  },
+  {
+    "word": "ambulance",
+    "pron": "/ˈæmbjələns/",
+    "mean": ["救急車"],
+    "tag": "[緊急 / 医療]",
+    "aiex": "Call an ambulance right now!",
+    "aitrans": "今すぐ救急車を呼んで！",
+    "movie": "I hear an ambulance coming.",
+    "movieTrans": "救急車が来る音が聞こえる。",
+    "catchTone": "【命を繋ぐ移動】",
+    "catchCore": "歩く、移動する病院",
+    "originText": "ラテン語の<span class=\"hl-word\">Ambulare（歩く）</span>が語源。もともとは戦場を「移動する」野戦病院を指していた。",
+    "nuanceText": "非常に基礎的な単語だが、語源を知るとamble（ぶらぶら歩く）やpreamble（前文＝先に歩くもの）との繋がりが見えてくる。",
+    "map": {
+      "rootMain": "Ambul",
+      "rootSub": "(歩く / 移動する)",
+      "children": [
+        { "text": "Ambulance : 救急車（名）", "isMain": true },
+        { "text": "Amble : ぶらぶら歩く（動）" },
+        { "text": "Ambulatory : 歩行の、移動式の（形）" },
+        { "text": "Preamble : 前文、序文（名）" }
+      ]
+    }
+  },
+  {
+    "word": "take responsibility for",
+    "pron": "/teɪk rɪˌspɒnsəˈbɪləti fɔːr/",
+    "mean": ["〜の責任を取る", "〜を引き受ける"],
+    "tag": "[覚悟 / 公的]",
+    "aiex": "You must take responsibility for your actions.",
+    "aitrans": "自分の行動に責任を持たなければならない。",
+    "movie": "I will take full responsibility for this.",
+    "movieTrans": "これについては私が全責任を負う。",
+    "catchTone": "【重責を背負う勇気】",
+    "catchCore": "応答する能力（義務）を受け取る",
+    "originText": "<span class=\"hl-word\">Respond（応答する）</span>＋<span class=\"hl-word\">Ability（能力）</span>。何か起きた時に「応答する義務」を<span class=\"hl-word\">Take（受け取る）</span>すること。",
+    "nuanceText": "過ちを認めて謝罪する時だけでなく、リーダーとして任務を完遂するという前向きな「責任」の文脈でも多用される。",
+    "map": {
+      "rootMain": "Spond",
+      "rootSub": "(約束する / 答える)",
+      "children": [
+        { "text": "Respond : 反応する、答える（動）" },
+        { "text": "Response : 反応（名）" },
+        { "text": "Responsible : 責任がある（形）" },
+        { "text": "Take responsibility for : 責任を取る（熟語）", "isMain": true },
+        { "text": "Sponsor : 保証人、スポンサー（名）" }
+      ]
+    }
+  },
+  {
+    "word": "jailbreak",
+    "pron": "/ˈdʒeɪlbreɪk/",
+    "mean": ["脱獄", "制限解除"],
+    "tag": "[犯罪 / IT]",
+    "aiex": "There was a massive jailbreak last night.",
+    "aitrans": "昨夜、大規模な脱獄があった。",
+    "movie": "This isn't just a jailbreak.",
+    "movieTrans": "これはただの脱獄じゃない。",
+    "catchTone": "【封鎖を破る脱出】",
+    "catchCore": "監獄を壊す",
+    "originText": "<span class=\"hl-word\">Jail（監獄）</span>を<span class=\"hl-word\">Break（壊す・突破する）</span>して外に出ること。",
+    "nuanceText": "本来の「脱獄」以外に、スマホのOS（特にiOS）などの制限を非公式な方法で解除することを指すIT用語としても有名。",
+    "map": {
+      "rootMain": "Break",
+      "rootSub": "(壊す / 突破)",
+      "children": [
+        { "text": "Breakout : 脱出、発生（名）" },
+        { "text": "Jailbreak : 脱獄、制限解除（名）", "isMain": true },
+        { "text": "Breakthrough : 飛躍的進歩（名）" },
+        { "text": "Breakfast : 朝食（断食を破る）（名）" }
+      ]
+    }
+  },
+  {
+    "word": "bust out of",
+    "pron": "/bʌst aʊt əv/",
+    "mean": ["〜から脱走する", "〜から飛び出す"],
+    "tag": "[勢い / 脱出]",
+    "aiex": "He wanted to bust out of his routine.",
+    "aitrans": "彼は日常のルーティンから抜け出したかった。",
+    "movie": "We're going to bust her out of here.",
+    "movieTrans": "彼女をここから連れ出す（脱出させる）ぞ。",
+    "catchTone": "【豪快な突き破り】",
+    "catchCore": "破裂して外へ",
+    "originText": "<span class=\"hl-word\">Bust（壊す・破裂する）</span>して外に<span class=\"hl-word\">Out（出る）</span>こと。乱暴で勢いのある脱出を想起させる。",
+    "nuanceText": "脱獄のような深刻な場面だけでなく、「退屈な状況から抜け出す」といった比喩的な表現としてもカジュアルに使われる。",
+    "map": {
+      "rootMain": "Bust",
+      "rootSub": "(壊す / 破裂)",
+      "children": [
+        { "text": "Bust : 壊す、逮捕する（動）" },
+        { "text": "Bust out of : 〜から脱出する（熟語）", "isMain": true },
+        { "text": "Busted : 捕まった、壊れた（形）" },
+        { "text": "Blockbuster : 大ヒット作（名）" }
+      ]
+    }
+  },
+  {
+    "word": "clearance",
+    "pron": "/ˈklɪərəns/",
+    "mean": ["許可", "承認", "隙間"],
+    "tag": "[公的 / 物理]",
+    "aiex": "You need security clearance for this floor.",
+    "aitrans": "この階に入るにはセキュリティ許可が必要です。",
+    "movie": "Do you have the necessary clearance?",
+    "movieTrans": "必要な許可は持っているのか？",
+    "catchTone": "【障害を取り除いた道】",
+    "catchCore": "澄んだ、空いた状態にする",
+    "originText": "<span class=\"hl-word\">Clear（澄んだ、何もない）</span>状態にすること。障害物や疑念を取り除き、通れるようにすること。",
+    "nuanceText": "機密情報へのアクセス権（security clearance）や、在庫一掃セール（clearance sale）、また橋の下を船が通れる「隙間・高さ」など、多岐にわたる「通り抜けるための条件」を指す。",
+    "map": {
+      "rootMain": "Clear",
+      "rootSub": "(澄んだ / 取り除く)",
+      "children": [
+        { "text": "Clear : 透明な、片付ける（形・動）" },
+        { "text": "Clearance : 許可、隙間、一掃（名）", "isMain": true },
+        { "text": "Clarify : 明確にする（動）" },
+        { "text": "Declare : 宣言する（動）" }
+      ]
+    }
+  },
+  {
+    "word": "break out of",
+    "pron": "/breɪk aʊt əv/",
+    "mean": ["〜から脱出する", "〜を打破する"],
+    "tag": "[脱出 / 変化]",
+    "aiex": "He tried to break out of prison.",
+    "aitrans": "彼は刑務所から脱走しようとした。",
+    "movie": "I need to break out of this cage.",
+    "movieTrans": "この檻から抜け出さなきゃならないんだ。",
+    "catchTone": "【殻を破る解放】",
+    "catchCore": "壊して外へ出る",
+    "originText": "<span class=\"hl-word\">Break（壊す）</span>て拘束を解き、<span class=\"hl-word\">Out（外）</span>の世界へ踏み出すイメージ。",
+    "nuanceText": "物理的な脱出だけでなく、「殻を破る」「固定観念から抜け出す」など、自分を縛っている何かを打ち破るポジティブな変化にも使われる。",
+    "map": {
+      "rootMain": "Break",
+      "rootSub": "(壊す / 中断)",
+      "children": [
+        { "text": "Break : 壊す、休み（動・名）" },
+        { "text": "Break out of : 〜から脱出する（動）", "isMain": true },
+        { "text": "Break through : 突破する（動）" },
+        { "text": "Outbreak : 発生、勃発（名）" }
+      ]
+    }
+  },
+  {
+    "word": "roadblock",
+    "pron": "/ˈroʊdblɒk/",
+    "mean": ["検問所", "障害物", "進行を妨げるもの"],
+    "tag": "[困難 / 物理的遮断]",
+    "aiex": "The police set up a roadblock.",
+    "aitrans": "警察が道路を封鎖した（検問所を設置した）。",
+    "movie": "We hit a major roadblock in our plan.",
+    "movieTrans": "計画に大きな障害が立ちはだかった。",
+    "catchTone": "【行く手を阻む壁】",
+    "catchCore": "道をブロックする",
+    "originText": "<span class=\"hl-word\">Road（道）</span>を<span class=\"hl-word\">Block（塞ぐ）</span>もの。物理的な封鎖から転じて比喩的な「壁」を指す。",
+    "nuanceText": "逃走経路を遮断する警察の検問を指すほか、プロジェクトの進捗を止めてしまう重大な問題点などを指す際にも非常によく使われるメタファー。",
+    "map": {
+      "rootMain": "Block",
+      "rootSub": "(塊 / 塞ぐ)",
+      "children": [
+        { "text": "Block : 塞ぐ、区画、塊（動・名）" },
+        { "text": "Roadblock : 障害物、検問（名）", "isMain": true },
+        { "text": "Blockage : 閉鎖、詰まり（名）" },
+        { "text": "Obstacle : 障害（名）" }
+      ]
+    }
+  },
+  {
+    "word": "get rid of",
+    "pron": "/ɡet rɪd əv/",
+    "mean": ["〜を取り除く", "〜を処分する", "〜を追い払う"],
+    "tag": "[解消 / 決別]",
+    "aiex": "I need to get rid of this old sofa.",
+    "aitrans": "この古いソファを処分しなきゃ。",
+    "movie": "We have to get rid of the evidence.",
+    "movieTrans": "証拠を処分しなければならない。",
+    "catchTone": "【厄介払いと清算】",
+    "catchCore": "解放された状態にする",
+    "originText": "<span class=\"hl-word\">Rid（取り除く、解放する）</span>という状態を<span class=\"hl-word\">Get（手に入れる）</span>すること。",
+    "nuanceText": "不要な物、不快な習慣、あるいは邪魔な人物など、自分にとってマイナスなものを「遠ざけてスッキリする」というニュアンス。",
+    "map": {
+      "rootMain": "Rid",
+      "rootSub": "(取り除く / 免れる)",
+      "children": [
+        { "text": "Rid : 取り除く（動）" },
+        { "text": "Get rid of : 処分する（熟語）", "isMain": true },
+        { "text": "Riddance : 除去、厄介払い（名）" },
+        { "text": "Free : 自由にする（動）" }
+      ]
+    }
+  },
+  {
+    "word": "lay low",
+    "pron": "/leɪ loʊ/",
+    "mean": ["目立たないようにする", "身を潜める"],
+    "tag": "[潜伏 / 慎重]",
+    "aiex": "I'm going to lay low for a while.",
+    "aitrans": "しばらくの間、大人しく（目立たなく）しておくよ。",
+    "movie": "The best thing to do is lay low.",
+    "movieTrans": "今は身を潜めておくのが一番だ。",
+    "catchTone": "【嵐が過ぎるのを待つ伏兵】",
+    "catchCore": "低く横たわる",
+    "originText": "姿勢を<span class=\"hl-word\">Low（低く）</span>して<span class=\"hl-word\">Lay（置く・横たわる）</span>ことで、周囲の視界に入らないようにする様子。",
+    "nuanceText": "警察に追われている時や、スキャンダルを避ける時、あるいは単に注目を浴びたくない時に、意図的に活動を控えることを表す。",
+    "map": {
+      "rootMain": "Lay",
+      "rootSub": "(置く / 横たえる)",
+      "children": [
+        { "text": "Lay : 置く、横たえる（動）" },
+        { "text": "Lie : 横たわる、嘘をつく（動）" },
+        { "text": "Lay low : 身を潜める（熟語）", "isMain": true },
+        { "text": "Layer : 層（名）" },
+        { "text": "Inlay : はめ込む（動）" }
+      ]
+    }
+  },
+  {
+    "word": "interrupt",
+    "pron": "/ˌɪntəˈrʌpt/",
+    "mean": ["邪魔をする", "中断させる", "話を遮る"],
+    "tag": "[遮断 / 社交]",
+    "aiex": "Sorry to interrupt, but you have a call.",
+    "aitrans": "お話し中すみませんが、お電話です。",
+    "movie": "Don't interrupt me while I'm working.",
+    "movieTrans": "仕事中に邪魔をしないでくれ。",
+    "catchTone": "【流れを断ち切る横槍】",
+    "catchCore": "間に割って入って壊す",
+    "originText": "<span class=\"hl-word\">Inter-（間に）</span>+ <span class=\"hl-word\">Rupt（壊す・折る）</span>。進行しているものの間に割って入り、その連続性を壊すこと。",
+    "nuanceText": "失礼な割り込みだけでなく、会議や通信の「一時的な中断」など、幅広い文脈での「遮断」を表す。謝罪表現の \"Sorry to interrupt\" は頻出フレーズ。",
+    "map": {
+      "rootMain": "Rupt",
+      "rootSub": "(壊す / 折る)",
+      "children": [
+        { "text": "Erupt : 噴火する（動）" },
+        { "text": "Bankrupt : 破産した（形）" },
+        { "text": "Interrupt : 邪魔する、中断する（動）", "isMain": true },
+        { "text": "Abrupt : 突然の（形）" },
+        { "text": "Disrupt : 混乱させる（動）" }
+      ]
+    }
+  }
+];
+
+const advData = [];
+    /* ========================================================= */
+
+    document.title = `${movieTitle}_単語リスト`;
+    document.getElementById('page-title').innerText = `${movieTitle}：学習単語リスト`;
+
+    let currentVoice = null;
+    let availableVoices = [];
+
+    function initVoices() {
+        let voices = window.speechSynthesis.getVoices();
+        if (voices.length === 0) return;
+        const ua = navigator.userAgent;
+        const isEdge = ua.includes('Edg');
+        const isChrome = ua.includes('Chrome') && !isEdge && !ua.includes('OPR');
+        const allowedNames = ["Jenny", "Eric", "Christopher", "Google US English", "Mark"];
+        let filteredVoices = voices.filter(v => {
+            if (!v.lang.startsWith('en-US')) return false;
+            if (v.name.includes('Multilingual') || v.name.includes('David') || v.name.includes('Zira')) return false;
+            return allowedNames.some(allowed => v.name.includes(allowed));
+        });
+        const select = document.getElementById('voice-select');
+        select.innerHTML = '';
+        availableVoices = [];
+        filteredVoices.forEach(v => {
+            let isAllowed = false;
+            if (isEdge) isAllowed = ["Jenny", "Eric", "Christopher", "Mark"].some(n => v.name.includes(n));
+            else if (isChrome) isAllowed = ["Google US English", "Mark"].some(n => v.name.includes(n));
+            else isAllowed = v.name.includes("Mark");
+            if (isAllowed) {
+                availableVoices.push(v);
+                const option = document.createElement('option');
+                option.value = v.name; option.textContent = v.name; select.appendChild(option);
+            }
+        });
+        let defaultTarget = isEdge ? "Jenny" : isChrome ? "Google US English" : "Mark";
+        let defaultVoice = availableVoices.find(v => v.name.includes(defaultTarget));
+        if (defaultVoice) { select.value = defaultVoice.name; currentVoice = defaultVoice; }
+        select.addEventListener('change', (e) => { currentVoice = availableVoices.find(v => v.name === e.target.value); });
+    }
+    if (window.speechSynthesis.onvoiceschanged !== undefined) window.speechSynthesis.onvoiceschanged = initVoices;
+    initVoices();
+
+    function speak(text, event) {
+        if(event) event.stopPropagation();
+        window.speechSynthesis.cancel();
+        let cleanText = text.replace(/[\(（].*?[\)）]/g, "").trim();
+        const msg = new SpeechSynthesisUtterance(cleanText);
+        msg.lang = 'en-US'; 
+        msg.rate = parseFloat(document.getElementById('rate-select').value);
+        if (currentVoice) msg.voice = currentVoice;
+        window.speechSynthesis.speak(msg);
+    }
+
+    function playMovieLine(element, text, event) {
+        if(event) event.stopPropagation();
+        if (!element.classList.contains('revealed')) { element.classList.add('revealed'); return; }
+        speak(text, event);
+    }
+
+    function adjustWordSizes() {
+        document.querySelectorAll('.word-info').forEach(infoBlock => {
+            const container = infoBlock.querySelector('.clickable-word-area');
+            const textEl = infoBlock.querySelector('.word-title-text');
+            infoBlock.style.setProperty('--scale', '1');
+            const maxWidth = container.clientWidth - 16;
+            const textWidth = textEl.scrollWidth;
+            if (textWidth > maxWidth && maxWidth > 0) {
+                const scale = (maxWidth / textWidth) * 0.95;
+                infoBlock.style.setProperty('--scale', scale);
+            }
+        });
+    }
+    window.addEventListener('resize', adjustWordSizes);
+
+    function buildTree(nodes) {
+        if (!nodes || nodes.length === 0) return '';
+        let html = '<div class="branch-container">';
+        nodes.forEach(node => {
+            let nodeClass = node.isMain ? 'node main-node' : 'node';
+            let wordForSpeech = node.text.split('(')[0].trim().replace(/'/g, "\\'");
+            html += `<div class="node-row"><div class="${nodeClass}" onclick="speak('${wordForSpeech}', event)">${node.text}</div>`;
+            if (node.children) html += buildTree(node.children);
+            html += `</div>`;
+        });
+        html += '</div>';
+        return html;
+    }
+
+    function createRows(data, containerId) {
+        const tbody = document.getElementById(containerId);
+        data.forEach(item => {
+            const tr = document.createElement('tr');
+            const meanArray = Array.isArray(item.mean) ? item.mean : [item.mean];
+            const meanHtml = `<ul class="mean-list">` + meanArray.map(m => `<li>${m}</li>`).join('') + `</ul>`;
+            
+            const movieTransHtml = item.movieTrans ? `<div style="color: var(--text-muted); font-size: 0.8rem; margin-top: 4px;">（訳）${item.movieTrans}</div>` : '';
+
+            tr.innerHTML = `
+                <td>
+                    <div class="word-info">
+                        <div class="clickable-word-area" onclick="speak('${item.word.replace(/'/g, "\\'")}', event)">
+                            <div class="word-title-container"><span class="word-title-text">${item.word}</span></div>
+                            <div class="pron">${item.pron}</div>
+                        </div>
+                        <div class="reveal-box reveal-mean" onclick="this.classList.toggle('hidden')">${meanHtml}</div>
+                    </div>
+                </td>
+                <td>
+                    <span class="usage-tag">[${item.tag}]</span>
+                    <div class="clickable-ex-area" onclick="speak('${item.aiex.replace(/'/g, "\\'")}', event)">
+                        <div class="ai-ex">${item.aiex}</div>
+                        <div class="trans-text">（訳）${item.aitrans}</div>
+                    </div>
+                    <div class="reveal-movie" onclick="playMovieLine(this, '${item.movie.replace(/'/g, "\\'")}', event)">
+                        "${item.movie}"
+                        ${movieTransHtml}
+                    </div>
+                </td>
+                <td>
+                    <!-- 3列目：ニュアンス移植デザイン -->
+                    <div class="origin-header">
+                        <span class="keyword-tone">${item.catchTone}</span>
+                        <span class="keyword-core">${item.catchCore}</span>
+                    </div>
+                    <div class="story-text">${item.originText}</div>
+                    <div class="nuance-box-a">
+                        <span class="nuance-label-a">💡 ニュアンス</span>
+                        <div class="nuance-text-a">${item.nuanceText}</div>
+                    </div>
+                </td>
+                <td>
+                    <!-- 4列目：関連マップ -->
+                    <div class="map-scroll-container">
+                        <div class="map-wrapper">
+                            <div class="node root-node" onclick="speak('${item.map.rootMain.split('(')[0].trim().replace(/'/g, "\\'")}', event)">
+                                <span class="root-main">${item.map.rootMain}</span>
+                                <span class="root-sub">${item.map.rootSub}</span>
+                            </div>
+                            ${buildTree(item.map.children)}
+                        </div>
+                    </div>
+                </td>
+            `;
+            tbody.appendChild(tr);
+        });
+        requestAnimationFrame(adjustWordSizes);
+    }
+    
+    createRows(midData, 'mid-list');
+    createRows(advData, 'adv-list');
+</script>
+</body>
+</html>
